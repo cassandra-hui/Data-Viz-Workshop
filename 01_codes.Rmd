@@ -1,0 +1,218 @@
+---
+title: "Visualizing Data with R: From Basics to Publication-Ready Graphics--Part 1"
+author: "Nevada Bioinformatics Center"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: 
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    theme: readable
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Introduction
+
+
+### 1.1 Understanding Data Types
+
+
+### 1.2 Crafting an Effective Data Story
+
+
+### 1.3 Why R?
+
+
+### 1.4 Understanding Long vs Wide Data Format
+
+
+```{r, message=FALSE, warning=FALSE}
+
+# Install libraries if necessary
+if (!requireNamespace("tidyr", quietly = TRUE)) {
+  install.packages("tidyr")
+}
+
+# Example wide dataset
+wide_data <- data.frame(
+  Group = c("A", "B", "C"),
+  Value_1 = c(10, 15, 20),
+  Value_2 = c(30, 25, 35)
+)
+
+# Convert wide data to long format
+library(tidyr)
+
+long_data <- wide_data %>%
+  pivot_longer(
+    cols = starts_with("Value"),  # Columns to pivot
+    names_to = "Variable",        # New column for variable names
+    values_to = "Value"           # New column for values
+  )
+
+# View the transformed data
+print(long_data)
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+wide_again <- long_data %>%
+  pivot_wider(
+    names_from = "Variable",  # Column names
+    values_from = "Value"     # Values for those columns
+  )
+
+print(wide_again)
+
+```
+
+
+### 1.5 Introduction to ggplot2
+
+
+```{r, message=FALSE}
+# Install libraries if necessary
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  install.packages("ggplot2")
+}
+
+library(ggplot2)
+
+# Get our dataset
+data("mtcars")
+
+
+
+```
+
+```{r}
+
+# Basic scatter plot of mpg vs wt from the mtcars dataset 
+ggplot(data = mtcars, aes(x = wt, y = mpg)) +
+  geom_point()
+
+```
+
+
+
+```{r, message=FALSE}
+ggplot(mtcars, aes(x = wt, y = mpg, color = factor(cyl))) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatter Plot of MPG vs. Weight",
+       x = "Weight (1000 lbs)",
+       y = "Miles per Gallon",
+       color = "Cylinders") +
+  theme_classic()
+
+```
+
+
+```{r, message=FALSE}
+# Define data, aes, and geom
+ggplot()
+
+```
+
+Add color to aes
+Add color to aes as a factor
+Add regression line
+Add one regression line
+
+### 2.2 Customizing Plots
+
+
+```{r, message=FALSE}
+# Add one black regression line without se
+
+
+```
+
+Adjust point size and transparency
+Change line type to dashed
+
+
+
+### Try it for yourself: 
+
+Change the code to increase the regression line thickness.
+
+```{r eval=FALSE}
+
+ggplot(data = mtcars, aes(x = wt, y = mpg)) +
+  geom_point(aes(color = factor(cyl)), size = 5, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed")
+
+```
+
+
+
+
+```{r, message=FALSE}
+
+# Change shape of cyl
+# Color by horsepower
+
+
+```
+
+
+### Try it for yourself:
+ 
+ 
+To make adjustments, let's first take a look at the variables we have to work with:
+ 
+```{r}
+head(mtcars)
+```
+
+The mtcars dataset contains data on 32 car models, with the following columns:
+
+- **mpg:** Miles per gallon (fuel efficiency).
+
+- **cyl:** Number of cylinders in the engine (4, 6, or 8).
+
+- **disp:** Engine displacement (in cubic inches).
+
+- **hp:** Gross horsepower.
+
+- **drat:** Rear axle ratio.
+
+- **wt:** Weight of the car (in 1000s of pounds).
+
+- **qsec:** 1/4 mile time (time in seconds to cover a quarter mile).
+
+- **vs:** Engine shape (0 = V-shaped, 1 = straight).
+
+- **am:** Transmission type (0 = automatic, 1 = manual).
+
+- **gear:** Number of forward gears.
+
+- **carb:** Number of carburetors.
+ 
+ 
+ Choose two different variables by which to color and shape the points:
+ 
+ 
+ 
+```{r, eval=FALSE}
+
+ggplot(data = mtcars, aes(x = wt, y = mpg)) +
+  geom_point(aes(color = ,              #Fill in 
+                 shape = ),             #Fill in
+             size = 5, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed")
+
+
+```
+
+
+## 3. Summary

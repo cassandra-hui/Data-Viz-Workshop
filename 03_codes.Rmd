@@ -1,0 +1,1157 @@
+---
+title: "Visualizing Data with R: From Basics to Publication-Ready Graphics--Part 3"
+author: "Nevada Bioinformatics Center"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: 
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    theme: readable
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Introduction
+
+### 1.1 Recap
+
+
+```{r, message=FALSE}
+# Load libraries 
+library(ggplot2)
+library(dplyr)
+
+# Set our theme to classic
+theme_set(theme_classic())
+```
+
+
+
+```{r}
+head(mtcars)
+```
+
+The mtcars dataset contains data on 32 car models, with the following columns:
+
+- **mpg:** Miles per gallon (fuel efficiency).
+
+- **cyl:** Number of cylinders in the engine (4, 6, or 8).
+
+- **disp:** Engine displacement (in cubic inches).
+
+- **hp:** Gross horsepower.
+
+- **drat:** Rear axle ratio.
+
+- **wt:** Weight of the car (in 1000s of pounds).
+
+- **qsec:** 1/4 mile time (time in seconds to cover a quarter mile).
+
+- **vs:** Engine shape (0 = V-shaped, 1 = straight).
+
+- **am:** Transmission type (0 = automatic, 1 = manual).
+
+- **gear:** Number of forward gears.
+
+- **carb:** Number of carburetors.
+ 
+
+In the dataset, we have categorical data (`cyl`, `vs`, `am`, `gear`, `carb`) and continuous data (`mpg`, `disp`, `hp`, `drat`, `wt`, `qsec`).
+
+
+```{r, message=FALSE}
+
+ggplot(data = mtcars, aes(x = factor(cyl), y = qsec)) +
+  geom_point(position = position_jitter(width = 0.05), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+        color = "black", width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+    size = 5, color = "black") +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  scale_y_continuous(breaks=c(12, 18, 24), limits=c(12,24))+ # Set axis limits and numbers
+  labs(
+    x = "Engine Size",  # X-axis label
+    y = "Quarter Mile Time (qsec)",  # Y-axis label
+    fill = "Engine Size")  # Legend title
+
+
+
+```
+
+
+
+### 1.2 Overview
+
+
+## 2. Combining Plots
+
+### 2.1 Facet Wrap
+
+
+```{r, message=FALSE}
+
+# Facet wrap by am with as_labeller(c("0" = "Automatic", "1" = "Manual"))
+
+
+ggplot(data = mtcars, aes(x = factor(cyl), y = qsec)) +
+  geom_point(position = position_jitter(width = 0.05), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+        color = "black", width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+    size = 5, color = "black") +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  scale_y_continuous(breaks=c(12, 18, 24), limits=c(12,24))+ # Set axis limits and numbers
+  labs(
+    x = "Engine Size",  # X-axis label
+    y = "Quarter Mile Time (qsec)",  # Y-axis label
+    fill = "Engine Size") 
+
+```
+
+
+Change to vs and label "0" = "V-Shaped", "1" = "Straight"
+Change to hp
+
+
+
+
+### 2.2 Combining Continuous Variables with Long Data
+
+
+```{r}
+head(mtcars)
+```
+
+
+
+```{r, message=FALSE}
+# Install libraries if necessary
+if (!requireNamespace("tibble", quietly = TRUE)) {
+  install.packages("tibble")
+}
+
+
+library(tibble)
+library(tidyr)
+
+```
+
+
+```{r, message=FALSE}
+
+mtcars_long <- mtcars %>%
+  rownames_to_column(var = "car_name") %>% # Keep the row names with the cars
+  pivot_longer(
+    cols = c("hp", "qsec"), 
+    names_to = "metric", 
+    values_to = "value"
+  )
+
+
+```
+
+
+
+```{r}
+head(mtcars_long)
+```
+
+
+```{r, message=FALSE}
+ggplot(data = mtcars_long, aes(x = factor(cyl), y = value, fill = metric)) +
+  geom_point(position = position_jitter(width = 0.05), size = 5, pch = 21, color = "black") +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+       color = "black", width = 0.2) +
+  stat_summary(fun.data = mean_cl_boot, geom = "point",
+        size = 5, color = "black") 
+
+```
+
+
+
+
+```{r, message=FALSE}
+# Facet wrap by metric with free y scales and as_labeller(c("hp" = "Horsepower", "qsec" = "Quarter Mile Time"))
+
+
+ggplot(data = mtcars_long, aes(x = factor(cyl), y = value)) +
+  geom_point(position = position_jitter(width = 0.05), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+        color = "black", width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+    size = 5, color = "black") +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  labs(
+    x = "Number of Cylinders",
+    y = "Value", 
+    fill = "Engine Size"
+  ) 
+```
+
+
+
+### 2.3 Patchwork
+
+
+
+```{r, message=FALSE}
+
+qsec_cyl <- ggplot(data = mtcars, aes(x = factor(cyl), y = qsec)) +
+  geom_point(position = position_jitter(width = 0.05), 
+             size = 5, 
+             pch = 21, 
+             color = "black", 
+             aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, 
+               geom = "errorbar",
+               color = "black", 
+               width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+    size = 5, color = "black")
+
+```
+
+
+
+```{r, message=FALSE}
+qsec_cyl
+```
+
+
+
+```{r, message=FALSE}
+
+qsec_cyl + scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  scale_y_continuous(breaks=c(12, 18, 24), limits=c(12,24))
+
+```
+
+
+
+```{r}
+
+qsec_cyl + scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  scale_y_continuous(breaks=c(12, 18, 24), limits=c(12,24)) +
+  labs(
+    x = "Engine Size",  # X-axis label
+    y = "Quarter Mile Time (qsec)",  # Y-axis label
+    fill = "Engine Size") + # Legend title
+  theme_bw() +
+  theme(legend.position = "none")
+
+```
+
+
+
+```{r, message=FALSE}
+qsec_cyl <- qsec_cyl + scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  scale_y_continuous(breaks=c(12, 18, 24), limits=c(12,24)) +
+  labs(
+    x = "Engine Size",  # X-axis label
+    y = "Quarter Mile Time (qsec)",  # Y-axis label
+    fill = "Engine Size") + # Legend title
+  theme(legend.position = "none")
+
+qsec_cyl        # View the plot
+```
+
+
+
+```{r, message=FALSE}
+mpg_wt <- ggplot(data = mtcars, aes(x = wt, y = mpg)) +
+  geom_point(aes(fill = factor(cyl)), pch = 21, color = "black", size = 5) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  labs(x = "Weight (1000 lbs)",
+       y = "Miles per Gallon",
+       fill = "Engine Size") 
+
+mpg_wt
+
+```
+
+
+
+```{r, message=FALSE}
+# Install libraries if necessary
+if (!requireNamespace("patchwork", quietly = TRUE)) {
+  install.packages("pathcwork")
+}
+
+library(patchwork)
+
+```
+
+
+
+```{r, message=FALSE}
+# Combine out plots side by side
+combined_plot <- qsec_cyl + mpg_wt
+
+combined_plot
+
+```
+
+
+
+```{r, message=FALSE}
+# Combine out plots on top of each other
+combined_plot <- qsec_cyl / mpg_wt
+
+combined_plot
+```
+
+
+
+```{r, message=FALSE}
+# Three plots, with two on the top and one below spanning the entire width
+# Make another plot
+plot3 <- ggplot(data = mtcars, aes(x = hp, y = disp)) + 
+  geom_point(aes(fill = factor(cyl)), pch = 21, color = "black", size = 5) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +        # Custom legend labels
+  labs(x = "Horsepower",
+       y = "Engine Displacement",
+       fill = "Engine Size") +
+  theme(legend.position = "none")
+
+
+```
+
+
+
+```{r, message=FALSE}
+combined_plot <- (qsec_cyl + mpg_wt) / plot3
+combined_plot
+
+```
+
+
+
+```{r, message=FALSE}
+combined_plot <- (qsec_cyl + mpg_wt) / plot3 +
+  plot_layout(heights = c(2, 1)) +  # Giving double height to the top row
+  plot_annotation(title = "Combined Plots", 
+                  subtitle = "This combines qsec by cyl and mpg by wt with another plot",
+                  tag_levels = 'A')
+
+combined_plot
+
+```
+
+
+## 3. Showing Significance
+
+
+```{r, message=FALSE}
+ggplot(data = mtcars, aes(x = factor(cyl), y = wt)) +
+  geom_point(position = position_jitter(width = 0.25), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+               width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+               size = 5) +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +  # Custom legend labels for cylinder groups
+  labs(
+    x = "Number of Cylinders",  # Updated x-axis label
+    y = "Weight (1000 lbs)",  # Y-axis label
+    fill = "Engine Size", # Legend title
+  )
+
+```
+
+
+#### Determining the Right Test
+
+
+```{r}
+by(mtcars$wt, mtcars$cyl, shapiro.test)
+```
+
+
+```{r, message=FALSE}
+
+ggplot(mtcars, aes(x = wt)) +
+  geom_histogram(binwidth = 0.5, fill = "steelblue", color = "black") +
+  facet_wrap(~cyl, nrow = 1) +
+  labs(title = "Distribution of Car Weights by Cylinder Count", x = "Weight (1000 lbs)", y = "Count") 
+
+```
+
+
+
+```{r, message=FALSE}
+
+# Install libraries if necessary
+if (!requireNamespace("ggpubr", quietly = TRUE)) {
+  install.packages("ggpubr")
+}
+
+library(ggpubr)
+
+
+```
+
+
+```{r, message=FALSE}
+# Define comparisons for significance testing
+comparisons <- list(
+  c("4", "6"),
+  c("6", "8"),
+  c("8", "4")
+)
+
+
+
+ggplot(data = mtcars, aes(x = factor(cyl), y = wt)) +
+  geom_point(position = position_jitter(width = 0.25), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+               width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+               size = 5) +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +  # Custom legend labels for cylinder groups
+  labs(
+    x = "Number of Cylinders",  # Updated x-axis label
+    y = "Weight (1000 lbs)",  # Y-axis label
+    fill = "Engine Size", # Legend title
+  ) +
+  stat_compare_means(
+    method = "wilcox.test", 
+    comparisons = comparisons, 
+    label = "p.signif", 
+    hide.ns = TRUE,  # Only show significant comparisons
+    method.args = list(exact = FALSE)  # Use approximate p-value calculation
+  )
+
+```
+
+
+
+```{r, message = FALSE}
+ggplot(data = mtcars, aes(x = factor(cyl), y = wt)) +
+  geom_point(position = position_jitter(width = 0.25), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+              width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+               size = 5) +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +  # Custom legend labels for cylinder groups
+  labs(
+    x = "Number of Cylinders",  # Updated x-axis label
+    y = "Weight (1000 lbs)",  # Y-axis label
+    fill = "Engine Size", # Legend title
+  ) +
+
+# Add significance bars manually
+annotate("segment", x = 1, xend = 2, y = 4.8, yend = 4.8, linewidth = 0.8) +  # Bar for 4 vs 6
+annotate("text", x = 1.5, y = 5, label = "*", size = 6) +                # Star for 4 vs 6
+
+annotate("segment", x = 1, xend = 3, y = 5.5, yend = 5.5, linewidth = 0.8) +  # Bar for 4 vs 8
+annotate("text", x = 2, y = 5.7, label = "**", size = 6) +               # Stars for 4 vs 8
+
+annotate("segment", x = 2, xend = 3, y = 6, yend = 6, linewidth = 0.8) +      # Bar for 6 vs 8
+annotate("text", x = 2.5, y = 6.2, label = "ns", size = 4)               # "ns" for 6 vs 8 (non-significant)
+
+```
+
+
+
+```{r, message=FALSE}
+ggplot(data = mtcars, aes(x = factor(cyl), y = wt)) +
+  geom_point(position = position_jitter(width = 0.25), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+               width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+               size = 5) +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +  # Custom legend labels for cylinder groups
+  labs(
+    x = "Number of Cylinders",  # Updated x-axis label
+    y = "Weight (1000 lbs)",  # Y-axis label
+    fill = "Engine Size", # Legend title
+  ) +
+
+ # Add an arrow pointing to an outlier
+  annotate("segment",
+           x = 2.3, y = 5.9, xend = 2.7, yend = 5.5,
+           arrow = arrow(length = unit(0.2, "cm")),
+           color = "black", linewidth = 1) +
+  
+  # Add text annotation near the arrow
+  annotate("text", x = 1.9, y = 5.9, label = "Truck in Disguise", color = "black", size = 4)
+```
+
+
+### Try it for yourself:
+
+Change the significance bars around: 
+
+```{r, eval=FALSE}
+ggplot(data = mtcars, aes(x = factor(cyl), y = wt)) +
+  geom_point(position = position_jitter(width = 0.25), size = 5, pch = 21, color = "black", aes(fill = factor(cyl))) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar",
+               width = 0.2) +
+  stat_summary(fun = mean, geom = "point",
+               size = 5) +
+  scale_fill_manual(
+    values = c("grey50", "grey40", "#0074D9"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) +  # Custom legend labels for cylinder groups
+  labs(
+    x = "Number of Cylinders",  # Updated x-axis label
+    y = "Weight (1000 lbs)",  # Y-axis label
+    fill = "Engine Size", # Legend title
+  ) +
+ 
+```
+
+
+## 4. Saving Plots
+
+
+```{r}
+ggsave("plot.pdf")
+```
+
+
+```{r, eval=FALSE}
+ggsave("plot.pdf", width = 6,   height = 4)
+ggsave("plot.pdf", width = 15,  height = 10,  units = "cm")
+ggsave("plot.pdf", width = 150, height = 100, units = "mm")
+```
+
+
+```{r}
+ggsave("too-small.pdf", width = 1.5, height = 1)
+```
+
+
+
+```{r}
+ggsave("too-large.pdf", width = 12, height = 8)
+```
+
+
+
+```{r}
+ggsave("plot.png")
+
+```
+
+
+```{r}
+ggsave("clear-plot.png", dpi =600)
+```
+
+
+
+```{r, message=FALSE}
+ggsave("myplot.png", plot = combined_plot, width = 7, height = 6.6, dpi = 600)
+```
+
+
+
+## 5. Advanced Figures
+
+
+### 1. Time Series with Line Plots
+
+#### 1.1 Line Plots
+
+
+```{r, message=FALSE}
+library(ggplot2)
+data("economics")
+head(economics)
+```
+
+
+
+```{r, message=FALSE}
+ggplot(economics, aes(x = date, y = psavert)) +   # assign x and y-axis from the dataset
+  geom_line(color = "indianred",linewidth=0.6) +       # add the line graph, color, and the size
+  labs(title = "Personal Savings",                # the title for the graph
+       x = "Year",                                # rename x-axis
+       y = "Personal Savings Rate") 
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+if (!requireNamespace("scales", quietly = TRUE)) {
+  install.packages("scales")
+}
+
+library(scales)  # For date formatting
+
+
+ggplot(economics, aes(x = date, y = psavert)) +   # assign x and y-axis from the dataset
+  geom_line(color = "indianred", linewidth=0.6) +      # add the line graph, color, and the size
+  geom_smooth(formula = y~x, method = 'loess', color = "black") +  # the relationship graph between x and y
+  scale_x_date(date_breaks = '5 years',  
+               labels = scales::date_format("%b-%y")) +  # Ensure correct date formatting using scales
+  labs(title = "Personal Savings",
+       subtitle = "1967 to 2015",
+       x = "",
+       y = "Personal Savings Rate") 
+```
+
+
+
+```{r, message=FALSE}
+
+economics <- economics %>%
+  mutate(unemploy_perc = (unemploy / pop) * 100)  # Convert to percentage
+
+
+
+# Create any "empty" ggplot and add geoms to it 
+ggplot() +
+  geom_line(data = economics, aes(x = date, y = psavert, color = "Personal Savings"), linewidth = 0.6) + 
+  geom_line(data = economics, aes(x = date, y = unemploy_perc, color = "Unemployment"), linewidth = 0.6) +
+  scale_x_date(date_breaks = '5 years', labels = scales::date_format("%b-%y")) + 
+  scale_color_manual(values = c("Personal Savings" = "indianred", "Unemployment" = "steelblue")) +
+  labs(title = "Personal Savings Rate versus Unemployment Rate",
+       subtitle = "1967 to 2015",
+       x = "",
+       y = "Percentage",
+       color = "Metric")  # Add legend title
+```
+
+
+Add a black loess line from the economics data, with no SE, and a width of 0.8 for both sets of data
+
+
+Add more to the theme()
+
+theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    plot.subtitle = element_text(size = 14),
+    legend.position = "bottom",
+    legend.title = element_text(hjust=0.5),
+    legend.background = element_rect(fill = "white", colour = "grey80", linewidth = 0.5, linetype = "solid"),
+    legend.text = element_text(size = 12)
+  )
+
+
+
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+
+ggplot(data = economics, aes(x = date)) +
+  geom_rect(aes(xmin = as.Date("2007-12-01"), xmax = as.Date("2009-06-01"), ymin = -Inf, ymax = Inf), fill = "grey", alpha = 0.3) +
+  geom_line(aes(y = psavert, color = "Personal Savings Rate"), size=1.2) +
+  geom_line(aes(y = unemploy_perc, color = "Unemployment Percentage"), size=1.2) +
+  scale_color_manual(values = c("Personal Savings Rate" = "indianred", "Unemployment Percentage" = "steelblue")) +
+  scale_x_date(date_breaks = '5 years', labels = date_format("%Y")) +
+  xlim(as.Date("2000-01-01"), as.Date("2015-12-31")) +  # Limiting the x-axis to show only data from 2000 to 2015
+  labs(
+    title = "Economic Indicators Over Time",
+    subtitle = "Highlighted Recession and Trends in Personal Savings and Unemployment",
+    x = "",
+    y = "Percentage",
+    color = "Metric"
+  ) +
+  theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    plot.subtitle = element_text(size = 14),
+    legend.position = "bottom",
+    legend.title = element_text(hjust=0.5),
+    legend.background = element_rect(fill = "white", colour = "grey80", size = 0.5, linetype = "solid"),
+    legend.text = element_text(size = 12)
+  ) +
+  annotate("text", x = as.Date("2007-12-01"), y = 10, label = "Start of Recession", size = 4, vjust = 1) +
+  geom_segment(aes(x = as.Date("2007-12-01"), y = 9, xend = as.Date("2007-12-01"), yend = 5),
+               arrow = arrow(type = "closed", length = unit(0.15, "inches")), color = "black")
+```
+
+#### 1.2 Stacked Area Plots
+
+
+```{r, message=FALSE}
+
+if (!requireNamespace("gcookbook", quietly = TRUE)) {
+  install.packages("gcookbook")
+}
+
+library(gcookbook)                              
+
+data(uspopage, package = "gcookbook")  
+head(uspopage)
+
+```
+
+
+
+```{r, message=FALSE}
+
+ggplot(uspopage, aes(x = Year,
+                     y = Thousands, 
+                     fill = AgeGroup)) +
+  geom_area() +
+  theme_classic()+
+  labs(title = "US Population by age",
+       x = "Year",
+       y = "Population in Thousands")
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+
+ggplot(uspopage, aes(x = Year,
+                     y = Thousands/1000, 
+                     fill = forcats::fct_rev(AgeGroup))) +
+  geom_area(color = "black") +
+  labs(title = "US Population by age",
+       subtitle = "1900 to 2002",
+       caption = "source: U.S. Census Bureau, 2003, HS-3",
+       x = "Year",
+       y = "Population in Millions",
+       fill = "Age Group") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_classic()
+```
+
+
+### 2. Combining Plot Types
+
+
+```{r, message=FALSE, warning=FALSE}
+
+library(lubridate)                          # In the tidyverse package, for date manipulation
+
+
+economics_adjust <- economics %>%
+  mutate(year = lubridate::year(date)) %>%  # Extract year from date
+  select(year, psavert, unemploy_perc) %>%
+  pivot_longer(cols = c(psavert, unemploy_perc), names_to = "metric", values_to = "value") %>%
+  filter(year %in% c(1990, 1995, 2000, 2005, 2010, 2015)) %>%  # Filter for specific years
+  group_by(year, metric) %>%
+  summarise(mean_value = round(mean(value, na.rm = TRUE), 1)) # Calculate mean and round it
+  
+
+
+
+
+ggplot(data = economics_adjust, aes(x = year, y = mean_value, color = metric)) +
+  geom_line(size = 1.2) +  # Draw the lines
+  geom_point(shape = 16, color = "white", show.legend = FALSE, size = 7) +  # White points to 'cut out' parts of the line
+  geom_text(aes(label = mean_value), color = "black", size = 3.5, show.legend = FALSE) +  # Text labels for values
+  scale_color_manual(values = c("indianred", "steelblue")) +
+  scale_x_continuous(limits = c(1980, 2015), breaks = c(1990, 1995, 2000, 2005, 2010, 2015)) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_text(size=14),
+    axis.title.y = element_blank(),
+    axis.text.y  = element_blank(),
+    axis.line.x = element_blank(),
+    axis.line.y = element_blank(),
+    axis.ticks = element_blank(),
+    legend.title = element_blank(),
+    legend.text = element_text(""),
+    legend.position = "none") +
+  annotate("text", x = 1980, y = 8.2, label = "Personal Savings Rate", color = "indianred", hjust = 0, size = 4.5) +  # Custom y-axis label for Personal Savings Rate
+  annotate("text", x = 1980, y = 3, label = "Unemployment Percentage", color = "steelblue", hjust = 0, size = 4.5)  # Custom y-axis label for Unemployment Percentage
+
+
+# Save the plot at the right size for the annotations
+ggsave("percentage.png", width = 10, height = 4, dpi = 600)  # Specify the dimensions in inches
+
+```
+
+
+
+```{r, message=FALSE}
+
+# Creating a violin plot with overlaid points
+ggplot(mtcars, aes(x = factor(cyl), y = wt, fill = factor(cyl))) +
+  geom_violin(trim = FALSE, color = "black", alpha = 0.8) +  # Draw violin plots
+  geom_jitter(width = 0.2, color = "black", size = 2, alpha = 0.6) +  # Overlay raw data points
+  labs(title = "Car Weight Distribution by Cylinder Count",
+       x = "Number of Cylinders",
+       y = "Weight (1000 lbs)") +
+  scale_fill_manual(values = c("#6a51a3", "#31a354", "#DAA520")) +
+  theme(
+    plot.title = element_text(hjust = 0.5,),  # Center the plot title
+    legend.position = "none"
+  )
+
+```
+
+
+	
+```{r, message=FALSE}
+
+# Calculate the overall mean weight from the mtcars dataset
+overall_mean_wt <- mean(mtcars$wt)
+
+# Creating a violin plot with overlaid points
+ggplot(mtcars, aes(x = factor(cyl), y = wt, fill = factor(cyl))) +
+  geom_violin(trim = FALSE, color = "black", alpha = 0.8) +  # Draw violin plots
+  geom_jitter(width = 0.2, color = "black", size = 2, alpha = 0.6) +  # Overlay raw data points
+  geom_hline(yintercept = overall_mean_wt, linetype = "dashed", color = "gray40", size = 1) +  # Overall average weight line
+  labs(x = "Number of Cylinders",
+       y = "Weight (1000 lbs)") +
+  scale_fill_manual(values = c("#6a51a3", "#31a354", "#DAA520")) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 12),
+    axis.line.x = element_line(linewidth = 1.5),
+    axis.line.y = element_blank(),
+    axis.ticks.y = element_blank()
+  ) +
+  annotate("text", x = 0.65, y = 3.6, label = "Average", size = 7, color = "grey40")
+```
+
+### 3. Multivariate Visualization
+
+#### 3.1 Heatmaps
+
+
+```{r, message=FALSE}
+
+if (!requireNamespace("pheatmap", quietly = TRUE)) {
+  install.packages("pheatmap")
+}
+
+
+library(pheatmap)
+pheatmap(mtcars)
+```
+
+
+
+```{r}
+?pheatmap
+```
+
+
+```{r, message=FALSE}
+
+pheatmap(mtcars, scale = "column")
+
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+pheatmap(mtcars, scale = "column", cluster_rows = FALSE)
+
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+if (!requireNamespace("corrplot", quietly = TRUE)) {
+  install.packages("corrplot")
+}
+
+if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
+  install.packages("RColorBrewer")
+}
+
+library(corrplot)                                 # visualization of a correlation matrix
+library(RColorBrewer)                             # creates nice looking color palettes                       
+
+mtcars_cor <- select_if(mtcars,is.numeric)         # select numeric variables
+corM <- cor(mtcars_cor, use="complete.obs")        # calulate the correlation matrix
+round(corM,2)                                     # adjust the correlation in two decimals
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+  geom_point() +
+  geom_smooth(method = lm, se=FALSE)
+
+```
+
+
+
+```{r, message=FALSE}
+
+ggplot(mtcars, aes(x=drat, y=qsec)) +
+  geom_point() +
+  geom_smooth(method = lm, se=FALSE)
+
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+if (!requireNamespace("reshape2", quietly = TRUE)) {
+  install.packages("reshape2")
+}
+
+library(reshape2)         # for function melt
+
+
+corMM <- melt(corM)        # transform into a long dataset for ggplot
+
+ggplot(corMM, aes(x = Var1, y = Var2, fill = value)) +  geom_tile()
+```
+
+
+
+```{r, message=FALSE}
+ 
+corrplot(corM)           
+
+```
+
+
+
+```{r, message=FALSE}
+ 
+corrplot(corM, col = colorRampPalette(c("darkblue", "white", "darkred"))(200))           
+
+```
+
+
+
+```{r, message=FALSE}
+
+corrplot(corM, col = colorRampPalette(c("darkblue", "white", "darkred"))(200), method="square", type="lower")   # visualization method "square" type "lower"
+
+```
+
+
+```{r, message=FALSE}
+corrplot(corM,col = colorRampPalette(c("darkblue", "white", "darkred"))(200),
+         method="color")      # visualization method "color" 
+
+```
+
+
+```{r, message=FALSE}
+corrplot(corM, col = colorRampPalette(c("darkblue", "white", "darkred"))(200),
+         method="number", type="upper",   # visualization method "number" type "upper"
+         number.cex=0.8)
+
+```
+
+
+```{r, message=FALSE}
+corrplot(corM, col = colorRampPalette(c("darkblue", "white", "darkred"))(200),
+         method="number", type="upper",   # correlation with `hclust` (clustering)
+         number.cex=0.8,
+         order="hclust")
+
+```
+
+
+#### 3.2 Generating Multi-Panel Figures
+
+
+```{r, warning=FALSE, message=FALSE}
+
+if (!requireNamespace("GGally", quietly = TRUE)) {
+  install.packages("GGally")
+}
+
+
+library(GGally)
+data("airquality")
+
+ggpairs(airquality)  
+
+```
+
+
+
+```{r, warning=FALSE, message=FALSE}
+
+ggpairs(airquality,
+  columns = 1:4) # Columns
+```
+
+
+
+```{r, warning=FALSE, message=FALSE}
+ggpairs(airquality,
+  columns = 1:4, 
+  aes(color = factor(Month),  # Color by Month (categorical variables only)
+            alpha = 0.8))     # Transparency
+```
+
+
+
+
+```{r, warning=FALSE, message=FALSE}
+
+ggpairs(airquality,
+        columns = 1:4, 
+        aes(color = factor(Month), alpha = 0.8)) +
+  scale_color_manual(values = c("steelblue","violet","violetred3","turquoise3","slateblue3")) +
+  theme_minimal() +
+  theme(
+    strip.text.x = element_text(size = 12, face = "bold"), # Adjust x axis strips
+    strip.text.y = element_text(size = 12, face = "bold"), # Adjust y axis strips
+    axis.text = element_text(size = "10")
+  )
+
+```
+
+
+## 6. Exercises
+
+Edit the plot below to create two plots, side by side, by transmission type (`am`). Be sure to label "0" as "Automatic" and "1" as "Manual".
+
+```{r, message=FALSE}
+
+
+ggplot(data = mtcars, aes(x= wt, y = mpg, color = factor(cyl))) +
+  geom_point(size = 5, alpha = 0.8) +
+  scale_color_manual(
+    values = c("grey80", "grey30", "#6a51a3"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) 
+
+
+
+```
+
+
+Now use the function `geom_text_repel` to annotate the three cars that weigh over 5,000 lbs. Some useful code is provided. 
+
+
+```{r, message=FALSE, eval = FALSE}
+# Add row names as a new column in the mtcars dataset
+mtcars$car_name <- rownames(mtcars)
+
+# Prepare data
+tmp <- mtcars %>%
+  mutate(annotation = case_when(wt > 5  ~ "yes")) 
+
+ggplot(data = tmp, aes(x= wt, y = mpg, color = factor(cyl))) +
+  geom_point(size = 5, alpha = 0.8) +
+  scale_color_manual(
+    values = c("grey80", "grey30", "#6a51a3"),
+    labels = c("4" = "Slowest", 
+               "6" = "Still Slow", 
+               "8" = "Fast but Broke")) 
+
+```
+
+
+Copy the plot and paste it in the code cell below. Add a different theme, label, and edit the sizes of the text.
+
+```{r, eval=FALSE}
+
+
+```
+
+Optional: Recreate this plot.
+
+![](images/ex3.1.png)
+
+
+```{r, eval=FALSE}
+
+```
+
+
+Optional: Can you remove the purple a in the figure legend? 
+
+Hint: Look at your options with `?geom_text_repel`.
+
+
+![](images/a.png)
+
+
+```{r, eval=FALSE}
+
+```
+
+
+Lastly, save your figure. 
+
+
+```{r, eval=FALSE}
+
+```
+
+
+
+
+## 7. Summary
+
+
+## 8. References
+
+
+- **ggplot2 Visualization Examples**: For comprehensive examples and tutorials on using ggplot2, visit [The R Graph Gallery - ggplot2](https://r-graph-gallery.com/ggplot2-package.html).
+
+## 9. Acknowledgments
+
+- This workshop was funded by [Nevada INBRE](https://www.unr.edu/nevada-inbre/about). 
+
+- Special thanks to Trevor Faske for his insightful methodologies and ideas, which have influenced the development of this material.
