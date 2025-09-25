@@ -316,7 +316,7 @@ By reordering we have layered the error bars behind the points.
 ### 2.4 Why Bar Plots are Bad
 
 **Example:**
-We are collecting the same data from two different sites (green and purple), both have the same mean (100) and the same standard deviation (15).
+We are collecting the same data from two different sites (Red and Blue), both have the same mean (100) and the same standard deviation (15).
 
 **Question:**
 Are the two datasets alike?
