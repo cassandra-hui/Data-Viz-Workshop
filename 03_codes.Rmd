@@ -689,6 +689,25 @@ theme(
 
 
 
+```{r}
+ggplot() +
+  geom_line(data = economics, aes(x = date, y = psavert, color = "Personal Savings"), linewidth=0.6) +
+  geom_smooth(data = economics, aes(x = date, y = psavert), 
+              method = "loess", se = FALSE, color = "black", linewidth = 0.8) +
+  geom_line(data = economics, aes(x = date, y = unemploy_perc, color = "Unemployment"), linewidth=0.6) +
+  geom_smooth(data = economics, aes(x = date, y = unemploy_perc), 
+              method = "loess", se = FALSE, color = "black", linewidth = 0.8) +
+  scale_x_date(date_breaks = '5 years', labels = date_format("%b-%y")) +
+  scale_color_manual(values = c("Personal Savings" = "indianred", "Unemployment" = "steelblue")) +
+  labs(title = "Personal Savings Rate vs. Unemployment Percentage",
+       subtitle = "1967 to 2015",
+       x = "",
+       y = "Percentage",
+       color = "Metric")
+
+```
+
+
 
 
 
